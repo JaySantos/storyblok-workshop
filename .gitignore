@@ -1,0 +1,6 @@
+# Secrets: never commit
+.env
+.env.*
+
+# Dependencies (restore with npm install)
+node_modules/
