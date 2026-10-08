@@ -7,3 +7,4 @@ node_modules/
 
 # Storyblok CLI run logs
 .storyblok/logs/
+.storyblok/reports/
