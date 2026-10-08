@@ -4,3 +4,6 @@
 
 # Dependencies (restore with npm install)
 node_modules/
+
+# Storyblok CLI run logs
+.storyblok/logs/

@@ -1,4 +1,6 @@
 import { createApiClient } from "@storyblok/api-client";
+import type { ISbStoryData } from "@storyblok/js";
+import type { Game, Genre, Studio, Person, Platform } from "./.storyblok/types/295731578815776/storyblok-components.d.ts";
 
 const client = createApiClient({
     accessToken: process.env.STORYBLOK_TOKEN!,
@@ -20,13 +22,24 @@ async function fetch_game(): Promise<any>{
     return(data);
 }
 
-function toSummary(data: any): string {
+function refName(data: ISbStoryData<Genre | Studio | Person | Platform> | string | undefined): string {
+    if (typeof(data) === `string` || data === undefined)
+        return 'Unknown';
+    return data.content?.name ?? 'Unknown';
+}
+
+function toSummary(data: { story: ISbStoryData<Game> }): string {
     let summary = ``;
-    summary = summary.concat(data.story.name + `\nGenre: ` + (data.story.content.genre[0]?.content?.name ?? 'Unknown'));
-    let studios = data.story.content.studio.map((e: any) => { return e?.content?.name ?? 'Unknown';});
-    summary = summary.concat(`\nStudio(s): ` + studios.join(', '));
-    let producers = data.story.content.hwt_producer.map((e: any) => { return e?.content?.name ?? 'Unknown';});
-    summary = summary.concat(`\nProducer(s): ` + producers.join(', '));
+
+    summary = summary.concat(data.story.name + `\nGenre: ` + refName(data.story.content.genre?.[0]));
+
+    let studios = data.story.content.studio?.map((e) => { return refName(e)});
+    let studiosJoin = studios?.join(', ') ?? 'None';
+    summary = summary.concat(`\nStudio(s): ` + studiosJoin);
+
+    let producers = data.story.content.hwt_producer?.map((e) => { return refName(e)});
+    let producersJoin = producers?.join(', ') ?? 'None';
+    summary = summary.concat(`\nProducer(s): ` + producersJoin);
     if (!data.story.content.release_year)
         summary = summary.concat('\nRelease: TBD' + '\n');
     else
@@ -36,18 +49,18 @@ function toSummary(data: any): string {
         else
             summary = summary.concat('\nRelease: ' + data.story.content.release_quarter + ' ' + data.story.content.release_year + '\n');
     }
-    let socialMediaLinks = data.story.content.social_media.map((e: any) => { return e.platform[0]?.content?.name ?? 'Unknown';});
-    summary = summary.concat('\nLinks : ' + socialMediaLinks.map((platform: string, index: number) => {
-        let url = data.story.content.social_media[index]?.url?.url ?? 'Unknown';
+    let socialMediaLinks = data.story.content.social_media?.map((e) => { return refName(e.platform?.[0])});
+    summary = summary.concat('\nLinks : ' + socialMediaLinks?.map((platform: string, index: number) => {
+        let url = data.story.content?.social_media?.[index]?.url?.url ?? 'Unknown';
         return platform + ' – ' + url;
     }).join(', '));
     
-    let stores = data.story.content.store.map((e: any) => {
-        const name = e.platform[0]?.content?.name ?? 'Unknown';
+    let stores = data.story.content.store?.map((e) => {
+        const name = refName(e.platform?.[0]);
         return name + ' – ' + (e.url?.url ?? 'Unknown');
     }).join(', ');
     summary = summary.concat('\nStores: ' + stores + '\nDescription: ' + data.story.content.description + '\n');
-
+    console.log(summary);
     return summary;
 }
 

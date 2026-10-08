@@ -3,7 +3,7 @@
 ## Status
 - **Interview with Tamas:** TBD next week, probably Tue 13 or Wed 14 Oct 2026.
 - **Plan:** Module 5 wrap-up (reverse query + JS SDK, kept short) → Module 6 (AI in Storyblok) → Module 7 (hands-on MCP server vs. CLI) → Module 8 (RAG over the CMS, reusing toSummary + webhook events) → Module 9 (interview synthesis + mock interview), finishing by Mon 12 Oct. Optional Module 10 (visual frontend + Visual Editor/Bridge) only if time allows.
-- **Current:** Modules 1–6 complete; Module 7 (MCP) hands-on done 2026-10-08 18:15. Next: Module 7.5 (Storyblok CLI, full hands-on); the MCP-vs-CLI closing question moves to the end of 7.5.
+- **Current:** Modules 1–6 complete; Module 7 (MCP) hands-on done 2026-10-08 18:15. Module 7.5 (CLI) in progress: steps 1–3 done (2026-10-08 19:50). Next: step 4 `stories pull --dry-run`, then step 5 migrations, step 6 closing question (MCP vs. CLI).
 
 ## Log
 
@@ -154,6 +154,14 @@ What Jay worked out / observed:
 - Using MCP as a user = conversational; "explain, don't execute" to explore or review a plan; calling tools directly = debugging via the **MCP Inspector** (`npx @modelcontextprotocol/inspector`, HTTP transport, URL `https://mcp.storyblok.com/mcp`). `npx` = run a package's command without installing it (like `pipx run`); check package names carefully.
 
 **Friction list additions:** docs describe a 3-step workflow while the server instructions describe 4 steps; whether the OAuth screen offers a separate "publish" permission (check); the error clarity when space listing isn't granted.
+
+### Module 7.5: Storyblok CLI (in progress)
+- **Step 1, login:** `npm install -D storyblok@latest`, `npx storyblok login` with a **Personal Access Token** (user-level, Management API, acts *as you* across your spaces; stored in `~/.storyblok/credentials.json`; never in code, repos, `.env`, screenshots or logs; CI uses a secrets store, ideally a separate token). CLI 4.23.4 greeted "Welcome Jay Santos": the token identifies the user, not a space.
+- **Step 2, `components pull --space <id>`** → `.storyblok/components/<id>/components.json` (10 components incl. starter `page/feature/grid/teaser`). groups/presets/tags files are **not written when empty** (the log shows count: 0; the docs list them unconditionally → friction). Logs in `.storyblok/logs/` (gitignored). **Schema as code:** commit the schema so diffs show exactly what changed (rename vs. delete); Git shows *when the change was detected*, not who clicked in the UI; `components push` (`--from` origin, `--space` target) syncs staging→prod. Best flow: schema edit + code edit in one PR → CI `components push`; editors without schema permissions.
+- **Step 3, `types generate --space <id> [--strict]`** → `.storyblok/types/storyblok.d.ts` + `.storyblok/types/<id>/storyblok-**components**.d.ts` (plural; the docs say singular → friction). Findings: **Q2 was missing from `release_quarter` since day one** (fixed in UI, re-pulled); `release_year?: string` (Number field typed as string, consistent with the API); without `--strict` there's `[k: string]: unknown` (typos not caught); `ISbStoryData` comes from `@storyblok/js`.
+- **TypeScript concepts learned:** union `|`, optional `?:`, string-literal types, generics `ISbStoryData<Game>`, inline object types `{ story: ... }`; `any` turns checking off (incl. in `map((e: any) => …)`); types describe shapes, they don't fetch or filter (runtime unchanged; Node doesn't type-check → `tsc --noEmit` in CI); narrowing with `typeof x === "string"` (narrowing applies to the checked variable); `?.[i]` not `?[i]` (otherwise it's a ternary); `typeof` returns a string name. Precedence trap (`+` vs `??`/ternary) hit a 3rd and 4th time → **compute fallbacks on their own line**.
+- **Typed `toSummary`** with a helper `refName(ref: ISbStoryData<Genre|Studio|Person|Platform> | string | undefined)`. Types caught: a typo (`release_quater`); **optional arrays** (`studio?.map` would crash for stories created before a field existed); the **UUID-string case** of references; passing an `ExternalLink` to `refName` instead of its `platform`. Output is identical to before.
+- Design: `toSummary(story: ISbStoryData<Game>)` recommended (one story with identity; works with get and list; keeps `full_slug`/`uuid` for Module 8).
 
 ## Pending assignment
 _(none)_
