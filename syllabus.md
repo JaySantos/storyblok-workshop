@@ -16,6 +16,7 @@
 | 5 | **Storyblok's APIs and SDKs.** Content Delivery API vs. Management API, tokens, the JS SDK | Hands-on |
 | 6 | **AI inside the CMS.** Storyblok AI Suite (translations, SEO, alt text, branding, bring-your-own model/tokens); governance and trust trade-offs | Discussion |
 | 7 | **Agents operating on content.** Storyblok MCP server vs. CLI; when an LLM should or shouldn't be in the loop | Hands-on |
+| 7.5 | **The Storyblok CLI, the deterministic counterpart to MCP.** (1) install and log in with a Personal Access Token; (2) `components pull`: the content model as files in Git; (3) `types generate`: replace `any` in `fetch-game-sdk.ts` with generated TypeScript types; (4) `stories pull`: export/backup with `--dry-run`; (5) **migrations**: a scripted bulk change (e.g. normalise `release_quarter` `q1`→`Q1`) with `--dry-run`, run, and rollback snapshot; (6) closing: when MCP, when CLI | Hands-on |
 | 8 | **The CMS as an AI data source.** RAG over structured content, webhook-driven re-indexing, AI search visibility (builds on the earlier RAG workshop) | Hands-on / synthesis |
 | 9 | **Interview synthesis.** DevRel lens: spotting developer friction, teaching it, mock questions in Tamas's style | Discussion |
 | 10 | **(Optional, if time allows) Visual frontend.** A minimal Ember Hollow page using the Storyblok JS SDK, one component per block (`game`, `external_link`), with the Storyblok Bridge so Visual Editor click-to-edit works. Check the current docs on local preview requirements first | Hands-on |

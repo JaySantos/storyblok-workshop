@@ -3,7 +3,7 @@
 ## Status
 - **Interview with Tamas:** TBD next week, probably Tue 13 or Wed 14 Oct 2026.
 - **Plan:** Module 5 wrap-up (reverse query + JS SDK, kept short) → Module 6 (AI in Storyblok) → Module 7 (hands-on MCP server vs. CLI) → Module 8 (RAG over the CMS, reusing toSummary + webhook events) → Module 9 (interview synthesis + mock interview), finishing by Mon 12 Oct. Optional Module 10 (visual frontend + Visual Editor/Bridge) only if time allows.
-- **Current:** Modules 1–6 complete (2026-10-08 11:45). Next: Module 7 (agents operating on content: MCP server vs. CLI, hands-on).
+- **Current:** Modules 1–6 complete; Module 7 (MCP) hands-on done 2026-10-08 18:15. Next: Module 7.5 (Storyblok CLI, full hands-on); the MCP-vs-CLI closing question moves to the end of 7.5.
 
 ## Log
 
@@ -140,6 +140,20 @@ Interview takeaway: AI inside a CMS is sold on **context, governance and consist
 **Question to ask Tamas (unverified, so ask rather than claim):**
 > "When the AI writes a field, how much of the surrounding content does it see? For example, would it pick up the referenced genre or studio, or does it rely mainly on the AI Branding context?"
 (The "referenced stories" are the entries a story points to via reference fields. For Ember Hollow: its Genre, Studio, Producer (Person) and Platform stories.)
+
+### Module 7: Agents operating on content, MCP server (done 2026-10-08, closing question deferred to 7.5)
+Sources: MCP server docs and setup docs; Management API intro; live `describe(createStory)` call through the Storyblok connector.
+
+What Jay worked out / observed:
+- `/v2/cdn/` = Content Delivery API, served via the CDN (Module 3). The **Management API** (`mapi.storyblok.com`) = CRUD with a user-level token, never client-side. Agents need it to *write*. Misconception fixed: the Management API isn't "optimized for AI"; the **MCP server** adds the AI layer (search → describe → execute).
+- **Safety design:** tools split by risk (`execute_readonly` / `execute_mutating` / `execute_destructive`, which needs explicit confirmation); Claude defaults to "Needs approval". Docs' rules: least privilege, read the plan back, verify IDs on deletes, sandbox. An approval only protects you if you read it (Module 6).
+- **Why not MCP in automation (Jay):** either no oversight or stuck waiting for approval. Plus **non-determinism**: the LLM chooses operations each run, while a CLI script is repeatable, testable and reviewable.
+- **Hands-on (separate chat, Storyblok connector, OAuth with least privilege: Stories R/W, Components R):** couldn't list spaces (not granted), so supplied the space ID (an ID isn't a secret). Read = `listStories`. Create = `getStoryById(roguelike)` (probably to learn the genre's shape) → search → `createStory`. Delete = `deleteStory` with confirmation; Metroidvania deleted, roguelike intact.
+- **Publishing is a parameter, not a permission:** `createStory` has `publish` (optional, "If true, the story will be published after creation") and `release_id` (create inside a Release for human review). With write access, the agent *can* publish, so instructions + approvals + releases are the gate.
+- **How the agent knew "my space" meant Storyblok:** inference from the tool descriptions and **server instructions** (MCP `initialize` → `instructions`). Excerpts: "ALWAYS call `describe`", "Ask the user if you don't have [space_id]", "ALWAYS use the `fields` parameter". Tip: name the system in prompts when several connectors are enabled. Tool descriptions/instructions = **documentation written for models** (a DevRel angle).
+- Using MCP as a user = conversational; "explain, don't execute" to explore or review a plan; calling tools directly = debugging via the **MCP Inspector** (`npx @modelcontextprotocol/inspector`, HTTP transport, URL `https://mcp.storyblok.com/mcp`). `npx` = run a package's command without installing it (like `pipx run`); check package names carefully.
+
+**Friction list additions:** docs describe a 3-step workflow while the server instructions describe 4 steps; whether the OAuth screen offers a separate "publish" permission (check); the error clarity when space listing isn't granted.
 
 ## Pending assignment
 _(none)_
