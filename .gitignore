@@ -8,3 +8,6 @@ node_modules/
 # Storyblok CLI run logs
 .storyblok/logs/
 .storyblok/reports/
+
+# Content exports contain drafts (verified: published stories can carry unpublished edits)
+.storyblok/stories/

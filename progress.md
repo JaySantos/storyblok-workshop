@@ -3,7 +3,7 @@
 ## Status
 - **Interview with Tamas:** TBD next week, probably Tue 13 or Wed 14 Oct 2026.
 - **Plan:** Module 5 wrap-up (reverse query + JS SDK, kept short) → Module 6 (AI in Storyblok) → Module 7 (hands-on MCP server vs. CLI) → Module 8 (RAG over the CMS, reusing toSummary + webhook events) → Module 9 (interview synthesis + mock interview), finishing by Mon 12 Oct. Optional Module 10 (visual frontend + Visual Editor/Bridge) only if time allows.
-- **Current:** Modules 1–6 complete; Module 7 (MCP) hands-on done 2026-10-08 18:15. Module 7.5 (CLI) in progress: steps 1–3 done (2026-10-08 19:50). Next: step 4 `stories pull --dry-run`, then step 5 migrations, step 6 closing question (MCP vs. CLI).
+- **Current:** Modules 1–6 complete; Module 7 (MCP) hands-on done 2026-10-08 18:15. Module 7.5 (CLI) in progress: steps 1–4 done (2026-10-08 20:06). Next: step 5 migrations, step 6 closing question (MCP vs. CLI).
 
 ## Log
 
@@ -162,6 +162,7 @@ What Jay worked out / observed:
 - **TypeScript concepts learned:** union `|`, optional `?:`, string-literal types, generics `ISbStoryData<Game>`, inline object types `{ story: ... }`; `any` turns checking off (incl. in `map((e: any) => …)`); types describe shapes, they don't fetch or filter (runtime unchanged; Node doesn't type-check → `tsc --noEmit` in CI); narrowing with `typeof x === "string"` (narrowing applies to the checked variable); `?.[i]` not `?[i]` (otherwise it's a ternary); `typeof` returns a string name. Precedence trap (`+` vs `??`/ternary) hit a 3rd and 4th time → **compute fallbacks on their own line**.
 - **Typed `toSummary`** with a helper `refName(ref: ISbStoryData<Genre|Studio|Person|Platform> | string | undefined)`. Types caught: a typo (`release_quater`); **optional arrays** (`studio?.map` would crash for stories created before a field existed); the **UUID-string case** of references; passing an `ExternalLink` to `refName` instead of its `platform`. Output is identical to before.
 - Design: `toSummary(story: ISbStoryData<Game>)` recommended (one story with identity; works with get and list; keeps `full_slug`/`uuid` for Module 8).
+- **Step 4, `stories pull`:** `--dry-run` fetched everything and wrote nothing locally (no `stories/` folder; checked) → a scope and filter check before writing. 14 stories = 9 entries + **5 folders** (folders are stories, `is_folder: true`). **Experiment (Jay):** edited Ember Hollow without publishing → the export contained the **draft** ("TEST EDIT") and the story showed `published: true` + **`unpublished_changes: true`**. Timestamp heuristic rejected: `updated_at` was 13 ms after `published_at` even with no changes. Rule: **don't commit content exports** (drafts; Git history is permanent; manual per-file checks fail; duplicate, stale content). Commit schema + types only; backups in private storage. `.storyblok/stories/` is gitignored. *The Management side (CLI, MCP) sees drafts; only the CDA + Public token is limited to published content.*
 
 ## Pending assignment
 _(none)_
