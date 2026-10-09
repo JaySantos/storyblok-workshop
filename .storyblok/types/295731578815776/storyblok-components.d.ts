@@ -22,7 +22,7 @@ export interface Game {
   cover?: StoryblokAsset;
   description?: string;
   release_year?: string;
-  release_quarter?: "" | "q1" | "q2" | "q3" | "q4";
+  release_quarter?: "" | "Q1" | "Q2" | "Q3" | "Q4";
   genre?: (ISbStoryData<Genre> | string)[];
   social_media?: ExternalLink[];
   store?: ExternalLink[];

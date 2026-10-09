@@ -3,7 +3,7 @@
 ## Status
 - **Interview with Tamas:** TBD next week, probably Tue 13 or Wed 14 Oct 2026.
 - **Plan:** Module 5 wrap-up (reverse query + JS SDK, kept short) → Module 6 (AI in Storyblok) → Module 7 (hands-on MCP server vs. CLI) → Module 8 (RAG over the CMS, reusing toSummary + webhook events) → Module 9 (interview synthesis + mock interview), finishing by Mon 12 Oct. Optional Module 10 (visual frontend + Visual Editor/Bridge) only if time allows.
-- **Current:** Modules 1–6 complete; Module 7 (MCP) hands-on done 2026-10-08 18:15. Module 7.5 (CLI) in progress: steps 1–4 done (2026-10-08 20:06). Next: step 5 migrations, step 6 closing question (MCP vs. CLI).
+- **Current:** Modules 1–6 complete; Module 7 (MCP) hands-on done 2026-10-08 18:15. Module 7.5 (CLI) in progress: steps 1–5 done (2026-10-09 13:06). Next: regenerate types `--strict`, commit, step 6 closing question (MCP vs. CLI). Revisit publish modes after the course.
 
 ## Log
 
@@ -163,6 +163,13 @@ What Jay worked out / observed:
 - **Typed `toSummary`** with a helper `refName(ref: ISbStoryData<Genre|Studio|Person|Platform> | string | undefined)`. Types caught: a typo (`release_quater`); **optional arrays** (`studio?.map` would crash for stories created before a field existed); the **UUID-string case** of references; passing an `ExternalLink` to `refName` instead of its `platform`. Output is identical to before.
 - Design: `toSummary(story: ISbStoryData<Game>)` recommended (one story with identity; works with get and list; keeps `full_slug`/`uuid` for Module 8).
 - **Step 4, `stories pull`:** `--dry-run` fetched everything and wrote nothing locally (no `stories/` folder; checked) → a scope and filter check before writing. 14 stories = 9 entries + **5 folders** (folders are stories, `is_folder: true`). **Experiment (Jay):** edited Ember Hollow without publishing → the export contained the **draft** ("TEST EDIT") and the story showed `published: true` + **`unpublished_changes: true`**. Timestamp heuristic rejected: `updated_at` was 13 ms after `published_at` even with no changes. Rule: **don't commit content exports** (drafts; Git history is permanent; manual per-file checks fail; duplicate, stale content). Commit schema + types only; backups in private storage. `.storyblok/stories/` is gitignored. *The Management side (CLI, MCP) sees drafts; only the CDA + Public token is limited to published content.*
+
+- **Step 5, migrations (2026-10-09):** `migrations generate game` → `.storyblok/migrations/<id>/game.js`, a function that receives a block and returns it. Jay's migration: uppercase `release_quarter`, `delete block.release_date` (orphaned data left after removing the field from the schema). **Surprise:** the run he thought was a dry run had no `-d`, so it **wrote** to Storyblok (evidence: `updated_at` 1 s after the log, log options without `dryRun`, two rollback snapshots). Without `--publish`, a migration changes only the **draft**, so the **next editor who clicks Publish ships it unknowingly**.
+  - **Experiment (3 groups × 3 modes, `***` name prefix):** group 1 = never published, group 2 = live + clean, group 3 = live + pending edits. Results: `all` → publishes every group (incl. never-published = leak of unannounced games; ships pending edits); `published` → only group 2 (**safe mode**); `published-with-changes` → only group 3 (ships pending edits). No single mode = groups 2 + 3.
+  - **Mental model:** two slots per story (draft, live); editors and migrations write only to the draft; Publish copies the **whole** draft live. No field-level publish found (per-language publish exists). The CLI can't migrate the published version. Practical answer for 500 games: `--publish published` + tell editors about group 3.
+  - **Idempotency:** `replace('*','')` only removes the first match → `replaceAll`. Re-running an idempotent migration is safe, **but** a skipped story (nothing changed) is **not published**, so "run with `published`, then `published-with-changes`" left Ember Hollow unpublished (my wrong suggestion). Published by hand.
+  - Side lessons: `story.name` (story title) vs `story.content.name` (our field), duplicated data that can drift; `.env` is only loaded via `--env-file` or the launch.json `envFile`; `games/${slug}` + passing `games/...` → `games/games/...` 404.
+  - **Revisit after the course** (Jay's request): draft/live slots, publish modes, and publishing via MCP `publishStory`. Still confusing.
 
 ## Pending assignment
 _(none)_

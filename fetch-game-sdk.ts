@@ -8,9 +8,9 @@ const client = createApiClient({
     inlineRelations: true
 });
 
-async function fetch_game(): Promise<any>{
+async function fetch_game(slug: string): Promise<any>{
 
-    const { data, error } = await client.stories.get("games/ember-hollow", {
+    const { data, error } = await client.stories.get(`games/${slug}`, {
         query: {
             version: "published",
             resolve_relations: "game.genre,game.studio,game.hwt_producer,external_link.platform"
@@ -31,7 +31,7 @@ function refName(data: ISbStoryData<Genre | Studio | Person | Platform> | string
 function toSummary(data: { story: ISbStoryData<Game> }): string {
     let summary = ``;
 
-    summary = summary.concat(data.story.name + `\nGenre: ` + refName(data.story.content.genre?.[0]));
+    summary = summary.concat(data.story.content.name + `\nGenre: ` + refName(data.story.content.genre?.[0]));
 
     let studios = data.story.content.studio?.map((e) => { return refName(e)});
     let studiosJoin = studios?.join(', ') ?? 'None';
@@ -64,7 +64,25 @@ function toSummary(data: { story: ISbStoryData<Game> }): string {
     return summary;
 }
 
-let gameData = fetch_game()
+let gameData = fetch_game('ember-hollow')
+    .then(data => {
+    console.log('Home data fetched successfully:', data);
+    let summary = toSummary(data);
+    console.log('Summary:', summary);
+    return summary;
+    })
+    .catch(error => {console.error('Error fetching home data:', error);});
+
+gameData = fetch_game('ghostless')
+    .then(data => {
+    console.log('Home data fetched successfully:', data);
+    let summary = toSummary(data);
+    console.log('Summary:', summary);
+    return summary;
+    })
+    .catch(error => {console.error('Error fetching home data:', error);});
+
+gameData = fetch_game('group-1-game')
     .then(data => {
     console.log('Home data fetched successfully:', data);
     let summary = toSummary(data);

@@ -76,7 +76,7 @@
     "display_name": null,
     "description": "Game Title",
     "created_at": "2026-10-07T14:26:35.393Z",
-    "updated_at": "2026-10-08T17:42:08.477Z",
+    "updated_at": "2026-10-09T10:35:49.535Z",
     "id": 228120966737442,
     "schema": {
       "name": {
@@ -106,23 +106,23 @@
         "options": [
           {
             "_uid": "553c3aee-5214-4e87-8533-3d7039b63aad",
-            "name": "Q1",
-            "value": "q1"
+            "name": "q1",
+            "value": "Q1"
           },
           {
             "_uid": "00aa076c-e67c-4c5d-974d-7c067216dbe8",
-            "value": "q2",
-            "name": "Q2"
+            "value": "Q2",
+            "name": "q2"
           },
           {
             "_uid": "9e1ea6d8-4937-4b4c-bc77-bd5881382326",
-            "value": "q3",
-            "name": "Q3"
+            "value": "Q3",
+            "name": "q3"
           },
           {
             "_uid": "638a5fbd-d5d6-49e8-ae5b-c993209a1d6a",
-            "value": "q4",
-            "name": "Q4"
+            "value": "Q4",
+            "name": "q4"
           }
         ],
         "id": "1WJBzWOgSuKU7ZFYPDxSPg"

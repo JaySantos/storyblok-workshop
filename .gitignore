@@ -11,3 +11,4 @@ node_modules/
 
 # Content exports contain drafts (verified: published stories can carry unpublished edits)
 .storyblok/stories/
+.storyblok/migrations/*/rollbacks/
