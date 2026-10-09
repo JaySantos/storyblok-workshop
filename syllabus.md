@@ -20,6 +20,7 @@
 | 8 | **The CMS as an AI data source.** RAG over structured content, webhook-driven re-indexing, AI search visibility (builds on the earlier RAG workshop) | Hands-on / synthesis |
 | 9 | **Interview synthesis.** DevRel lens: spotting developer friction, teaching it, mock questions in Tamas's style | Discussion |
 | 10 | **(Optional, if time allows) Visual frontend.** A minimal Ember Hollow page using the Storyblok JS SDK, one component per block (`game`, `external_link`), with the Storyblok Bridge so Visual Editor click-to-edit works. Check the current docs on local preview requirements first | Hands-on |
+| 11 | **(Optional, extra) Real webhooks.** (A) Point a Storyblok webhook (Settings → Webhooks) at **webhook.site** and check the real payload (`action`, `story_id`, `full_slug`) against the fields assumed in Module 8; (B) receive it in your own code: a small Node HTTP server calling `handleWebhook`, exposed via a tunnel (ngrok / Cloudflare Tunnel). Notes from the docs: reply 2xx + JSON, no retries, secrets are paid-only (published/unpublished webhooks are on the free plan per changelog; check deleted/moved) | Hands-on |
 
 ## Reference notes (checked 2026-10-07)
 
