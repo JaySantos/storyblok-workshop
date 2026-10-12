@@ -3,7 +3,7 @@
 ## Status
 - **Interview with Tamas:** TBD next week, probably Tue 13 or Wed 14 Oct 2026.
 - **Plan:** Module 5 wrap-up (reverse query + JS SDK, kept short) → Module 6 (AI in Storyblok) → Module 7 (hands-on MCP server vs. CLI) → Module 8 (RAG over the CMS, reusing toSummary + webhook events) → Module 9 (interview synthesis + mock interview), finishing by Mon 12 Oct. Optional Module 10 (visual frontend + Visual Editor/Bridge) only if time allows.
-- **Current:** Modules 1–6 complete; Module 7 (MCP) hands-on done 2026-10-08 18:15. Module 7.5 (CLI) done 2026-10-09 13:15. Module 8 done 2026-10-09 18:15. Order changed 2026-10-11 (Jay): 10 → 11 → **9 last**. Module 10 done 2026-10-11 13:50. Next: Module 11 (real webhooks), then 9. Revisit publish modes after the course.
+- **Current:** Modules 1–6 complete; Module 7 (MCP) hands-on done 2026-10-08 18:15. Module 7.5 (CLI) done 2026-10-09 13:15. Module 8 done 2026-10-09 18:15. Order changed 2026-10-11 (Jay): 10 → 11 → **9 last**. Module 10 done 2026-10-11; 10.5 (publish modes revisited) done 2026-10-12. Module 11 (Storyblok → Python RAG) done 2026-10-12. Next: Module 9 (synthesis + mock interview).
 
 ## Log
 
@@ -192,6 +192,26 @@ What Jay worked out / observed:
 - **`_editable` / `storyblokEditable`:** the card = component name, space, block `_uid`, story `id` (legacy) → `data-blok-c` + `data-blok-uid`. Bug found: passing the game to a link's `storyblokEditable` (every link selected the game). Each render function marks **its own** block.
 - **HTTPS:** required even on localhost (docs) → `@vitejs/plugin-basic-ssl`; accept the self-signed cert in a tab first (an iframe can't show the warning).
 - **Visual Editor:** Preview URL is space-wide; the editor loads `<preview URL>/<full_slug>` → fetch `cdn/stories${location.pathname}` (fallback for `/`). Without the Bridge: no outlines, and clicks navigate the iframe (Steam refuses framing). With `useStoryblokBridge(id, cb, { resolveRelations })`: click-to-edit + live updates via `cb(newStory)` → `renderBlok`. **Bug:** live updates arrived with **unresolved** references when `resolveRelations` was a comma-separated string; **an array fixed it** (friction #12d). Two SDKs, different relation defaults (#12c).
+
+### Module 10.5: Migrations and publish states, revisited (done 2026-10-12)
+- Terms: **states** (a story) = never published · published and clean · published with pending edits · taken offline; **modes** (CLI `--publish`) = `all` · `published` · `published-with-changes` (no `unpublished` mode).
+- Two slots: Save → draft only. Flags: clean = true/false; pending = true/true; never published = false/true; taken offline = false/false, or false/true once edited, i.e. the same flags as never published, so `first_published_at` (null vs a date) is what distinguishes them. A migration **always** edits the draft (so `unpublished_changes` becomes true); modes only decide the live slot.
+- **Experiment 2026-10-12** on a taken-offline Group 1 Game (non-idempotent `[m]` migration, `--starts-with "games/group-1-game"`, dry run 1/1 first): `published-with-changes` → not published; `published` → not published; `all` → **published, back live**. All three predicted correctly by Jay.
+- Verified table (✔ observed): never published: all ✔ published / published & p-w-c inferred not; clean: all ✔, published ✔ publish, p-w-c ✔ not; pending: all ✔ (ships edits), published ✔ not, p-w-c ✔ publish (ships edits); taken offline: all ✔ back live, published ✔ not, p-w-c ✔ not. Skipped = never published.
+- Side issues: ran the CLI from `frontend/` → "No directory found… run generate" → generate created a duplicate empty `frontend/.storyblok` (friction #24; delete it). `String.append` doesn't exist → `concat`.
+- Cleanup done by Jay (Group 1 Game unpublished, name fixed).
+- **Key insight (Jay):** the migration edits **every** story it matches; the mode only decides **which edited stories get published**. `published` + `published-with-changes` never make an offline story live; only `published` also never ships pending edits → the safe default (it still puts the fix live on all clean stories, usually the majority). A second run after an idempotent one skips everything → publishes nothing.
+- **Playbook (500 games: 380 clean, 50 pending, 50 never published, 20 offline):** 1) dry run from the **repo root**, check counts; 2) one real run with `--publish published` (never `all`); 3) verify: CLI counts = dry run, only clean stories got a new `published_at` (MAPI/MCP), public fetch shows `Q1`; 4) tell editors with pending edits (and owners of offline games) that the fix is in their drafts; 5) keep the rollback snapshot privately, commit `game.js`.
+
+### Module 11: Storyblok as the source of Jay's Python RAG (done 2026-10-12)
+- Replaced "real webhooks" (Jay, 2026-10-12): integrate the HW&T space with his existing RAG service (`Production_Workshop`, branch `storyblok`: FastAPI `POST /query?q=`, `all-MiniLM-L6-v2`, JSON vector store, semantic question cache, RAGAS faithfulness gate). Webhooks dropped altogether.
+- **Sample data** (via MCP): 15 games, 4 studios, 3 genres, 6 platforms; every game has 1–2 stores, 12 have 1–2 social links. Siegeworks = 2 studios, 2 producers, year only.
+- **`export_storyblok.py`:** `requests.get` on the CDA with the **Public** token, `version: published`, `content_type: game`, `resolve_relations`, `per_page: 100`. Relations come back in `rels` (content keeps UUID strings) → `rels_by_uuid` dict → `refName`. One text summary per story, filename = story `id`; `clearFolder` first so removed/unpublished games don't leave stale files. No Python SDK help: PyPI `storyblok` 0.1.2 has no relation inlining (friction #25).
+- Python lessons: `dict.get(k, default)`, chained `.get("url", {}).get("url")`, comprehensions + `", ".join(...)`, `x or "None"` for empty joins, `os.listdir`/`os.remove`, `open(..., "w"/"r", encoding="utf-8")`, `load_dotenv()` / `uv run --env-file`, POST vs GET (403), env not loaded (401), `story["name"]` vs `content["name"]` again.
+- **Ingest:** `chunk_text` returns `[text]` when `chunk_size == 0` (early return before the overlap check; test added) → one chunk per story, 15 + 2 = 17 chunks. Leftover demo code in `chunking.py` to remove.
+- **Query:** "Which games is Small Hours Collective working on?" → all four correct games; Ashfall Depths retrieved but correctly ignored. curl on PowerShell: `curl.exe -G -X POST <url> --data-urlencode "q=..."`.
+- **Citations:** sidecar `game_slugs.json` (`{id: full_slug}`, written by the exporter, outside `games/`), loaded in `lifespan` (`"r"`, not `"w"`, which truncates), sources mapped with `slugs.get(id, s)` by index (reassigning the loop variable doesn't change the list). The cache stores IDs, which is the stable key (slugs change on move, Module 8).
+- **Open:** cached answers go stale after a re-ingest (invalidate entries citing changed IDs, or clear on rebuild); remove `chunking.py` demo code.
 
 ## Pending assignment
 _(none)_

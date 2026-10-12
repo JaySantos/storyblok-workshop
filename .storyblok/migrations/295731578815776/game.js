@@ -6,7 +6,7 @@ export default function (block) {
   // delete block.release_date;
 
   if (block.name) {
-    block.name = block.name.replaceAll('*', '');
+    block.name = block.name.concat("[m]");
   }
 
   return block;
